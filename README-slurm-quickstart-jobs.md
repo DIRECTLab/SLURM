@@ -46,7 +46,6 @@ srun -N1 -n1 -c 4 --mem=4G --time=00:10:00 --pty bash
 Create a script:
 
 ```bash
-cat > job.sh <<'EOF'
 #!/bin/bash
 #SBATCH --job-name=test
 #SBATCH --output=slurm-%j.out
