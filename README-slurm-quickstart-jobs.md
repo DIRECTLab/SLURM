@@ -43,27 +43,31 @@ srun -N1 -n1 -c 4 --mem=4G --time=00:10:00 --pty bash
 
 ## 3) Submit a batch script (`sbatch`)
 
-Create a script:
+Create a script: slurm_test.slurm
 
 ```bash
-#!/bin/bash
-#SBATCH --job-name=test
-#SBATCH --output=slurm-%j.out
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=2G
-#SBATCH --time=00:05:00
-#SBATCH --partition=debug
-
-echo "Running on: $(hostname)"
-echo "SLURM_JOB_ID=$SLURM_JOB_ID"
-sleep 30
-EOF
-
-chmod +x job.sh
-sbatch job.sh
+#!/bin/bash                                                                                                                                                                                   
+#SBATCH -J out-test                                                                                                                                                                           
+#SBATCH -p debug                                                                                                                                                                              
+#SBATCH -N 1                                                                                                                                                                                  
+#SBATCH -n 1                                                                                                                                                                                  
+#SBATCH -w frutiger                                                                                                                                                                           
+#SBATCH -t 00:02:00                                                                                                                                                                           
+#SBATCH -o %x-%j.out                                                                                                                                                                          
+#SBATCH -e %x-%j.out                                                                                                                                                                          
+                                                                                                                                                                                              
+echo "HOST=$(hostname)"                                                                                                                                                                       
+echo "DATE=$(date)"                                                                                                                                                                           
+id                                                                                                                                                                                            
+sleep 30                                                                                                                                                                                      
+EOF                                                                                                                                                                                                                           
 ```
+
+submit the script
+```
+sbatch slurm_test.slurm
+```
+
 
 Monitor:
 
