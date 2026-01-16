@@ -16,18 +16,11 @@ This README covers:
 
 ## 1) Using GPUs in a Slurm batch job
 
-### 1.1 Prerequisites
-On the GPU worker node (example: `frutiger`), the OS must see the GPUs:
-
-```bash
-nvidia-smi -L
-ls -l /dev/nvidia0 /dev/nvidia1
-```
 
 If `nvidia-smi` fails, fix the NVIDIA driver/CUDA stack first. Slurm can only schedule GPUs it can see.
 
 ### 1.2 Minimal GPU batch script (stdout+stderr combined, relative output)
-Example requesting **1 GPU**:
+Example requesting **1 GPU** in a test_gpus.slurm:
 
 ```bash
 #!/bin/bash
@@ -35,11 +28,9 @@ Example requesting **1 GPU**:
 #SBATCH -p debug
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -w frutiger
 #SBATCH --gres=gpu:1
 #SBATCH -t 00:02:00
 
-# Relative path: written to the submit directory ($SLURM_SUBMIT_DIR)
 #SBATCH -o %x-%j.out
 #SBATCH -e %x-%j.out
 
@@ -50,8 +41,6 @@ echo "CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES"
 nvidia-smi -L
 nvidia-smi
 
-# Example: run your code
-python3 python_test.py
 ```
 
 Submit it:
