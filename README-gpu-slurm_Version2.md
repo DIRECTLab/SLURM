@@ -20,7 +20,7 @@ This README covers:
 If `nvidia-smi` fails, fix the NVIDIA driver/CUDA stack first. Slurm can only schedule GPUs it can see.
 
 ### 1.2 Minimal GPU batch script (stdout+stderr combined, relative output)
-Example requesting **1 GPU** in a test_gpus.slurm:
+Example requesting **1 GPU** in a gpu-test.slurm:
 
 ```bash
 #!/bin/bash
@@ -46,7 +46,7 @@ nvidia-smi
 Submit it:
 
 ```bash
-sbatch gpu-test.sbatch
+sbatch gpu-test.slurm
 ```
 
 Request **both GPUs** on a 2-GPU node:
