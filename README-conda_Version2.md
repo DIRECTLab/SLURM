@@ -102,32 +102,6 @@ conda env remove -n myenv
 Important: **Do not assume** that your currently-activated conda environment will be active inside a Slurm batch job.
 Always activate (or `conda run`) inside the job script.
 
-### 5.1 Preferred (simple): `conda run`
-Example `job.sbatch`:
-
-```bash
-#!/bin/bash
-#SBATCH -J conda-test
-#SBATCH -p debug
-#SBATCH -t 00:02:00
-
-# Relative output path; stdout and stderr to the same file
-#SBATCH -o %x-%j.out
-#SBATCH -e %x-%j.out
-
-export PATH=/home/software/miniforge3/bin:$PATH
-
-conda run -n myenv python -c "import sys; print(sys.executable); print(sys.version)"
-```
-
-Submit:
-
-```bash
-sbatch job.sbatch
-```
-
-### 5.2 Alternative: activate the env in the job script
-Use this if you need activation semantics (e.g., environment variables set by activation scripts):
 
 ```bash
 #!/bin/bash
