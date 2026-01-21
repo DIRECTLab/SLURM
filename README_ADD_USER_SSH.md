@@ -118,4 +118,6 @@ sudo systemctl reload sshd || sudo systemctl reload ssh
 
   # Delete User and their home directory
 
+```bash
   sudo userdel -r username
+```
