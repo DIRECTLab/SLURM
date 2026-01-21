@@ -15,16 +15,6 @@ Replace `newuser` with the username you want.
 sudo adduser newuser
 ```
 
-(Optional) Add to sudoers (common for admin users):
-```bash
-sudo usermod -aG sudo newuser
-```
-
-On RHEL/CentOS/Amazon Linux, the admin group may be `wheel`:
-```bash
-sudo usermod -aG wheel newuser
-```
-
 ---
 
 ## 2) Create the `.ssh` directory and set permissions
