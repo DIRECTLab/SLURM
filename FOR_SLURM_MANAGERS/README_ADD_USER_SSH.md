@@ -10,10 +10,10 @@ This guide creates a new Linux user and configures **key-based SSH access** (pub
 ---
 
 ## 1) Create the user
-Replace `newuser` with the username you want.
+Replace `newuser` with the username you want and `groupname` with the group you want (IE, `student` for students, `hpcusers` for long-term residents, etc).
 
 ```bash
-sudo useradd -m newuser
+sudo ldapadduser newuser groupname
 ```
 
 ---
@@ -36,5 +36,5 @@ Paste the public key from the users machine into the `authorized_keys` file.
 # Delete User and their home directory
 
 ```bash
-  sudo userdel -r username
+  sudo ldapdeleteuser username
 ```
