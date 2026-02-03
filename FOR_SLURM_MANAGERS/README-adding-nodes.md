@@ -198,98 +198,92 @@ If you run a firewall (ufw/iptables), allow controller inbound 6817 and worker i
 
 
 
-If you plan to mount the same `/home` on every compute node (so paths like `/home/software/miniforge3` are identical everywhere), follow these steps. The examples below assume Debian/Ubuntu on controller and workers; RHEL/CentOS notes are included.
+If you plan to mount the same `/home` on every compute node (so paths like `/home/software/miniforge3` are identical everywhere), follow these steps. The examples below assume Debian/Ubuntu on controller and workers; RHEL/CentOS notes are included. **Note:** The NFS host node is now `ryu` (not `kenmasters`).
 
-Important notes before you start
+---
+
+## A. Setting Up the NFS Host (`ryu`) (Ignore if already setup)
+
+**Important notes before you start:**
 - Exporting the whole `/home` is common but consider exporting a specific subtree (e.g. `/export/home` or `/export/software`) if you want finer control.
 - Restrict the export to your compute subnet (do NOT use `*(rw)` in production).
 - Ensure UID/GID consistency (LDAP/SSSD or synchronized passwd/group) so file ownerships are identical on all nodes.
 - Be careful with `no_root_squash` — it lets remote root act as root on the server and has security implications. Prefer default `root_squash` unless you explicitly need root permissions from clients.
 
-A. Server (controller `kenmasters`) — export `/home`
+1. **Install NFS server utilities:**
+  ```bash
+  sudo apt update
+  sudo apt -y install nfs-kernel-server
+  ```
+  (RHEL/CentOS: `sudo yum install -y nfs-utils` and enable nfs-server service)
 
-1. Install NFS server (Debian/Ubuntu):
+2. **Configure the export:**
+  - Edit `/etc/exports` and add (replace `192.168.0.0/24` with your subnet if different):
+    ```
+    /home 192.168.0.0/24(rw,sync,no_subtree_check)
+    ```
+  - For less restrictive root access (not recommended for most cases):
+    ```
+    /home 192.168.0.0/24(rw,sync,no_subtree_check,no_root_squash)
+    ```
 
-```bash
-sudo apt update
-sudo apt -y install nfs-kernel-server
-```
+3. **Apply the export and start the NFS server:**
+  ```bash
+  sudo exportfs -ra
+  sudo exportfs -v
+  sudo systemctl enable --now nfs-server
+  ```
 
-(RHEL/CentOS: sudo yum install -y nfs-utils && enable nfs-server service)
+4. **Verify the export from another host:**
+  ```bash
+  showmount -e ryu
+  rpcinfo -p ryu
+  ```
 
-2. Prepare and export `/home` (example export line — restrict to compute subnet):
+---
 
-Edit `/etc/exports` and add (replace `10.0.0.0/24` with your compute subnet or hostname list):
+## B. Adding a New NFS Client (e.g., a compute node)
 
-```
-/home 10.0.0.0/24(rw,sync,no_subtree_check)
-```
+1. **Install NFS client utilities:**
+  ```bash
+  sudo apt update
+  sudo apt -y install nfs-common
+  ```
+  (RHEL/CentOS: `sudo yum install -y nfs-utils`)
 
-- If you must allow root management from clients (less secure), consider:
-```
-/home 10.0.0.0/24(rw,sync,no_subtree_check,no_root_squash)
-```
+2. **Create the mount point and mount temporarily:**
+  ```bash
+  sudo mkdir -p /home
+  sudo mount -t nfs -o vers=4.2,proto=tcp ryu:/home /home
+  # or simply:
+  sudo mount ryu:/home /home
+  ```
 
-3. Apply exports:
+3. **Add a persistent mount in `/etc/fstab`:**
+  - Add this line:
+    ```
+    ryu:/home  /home  nfs  defaults,_netdev,vers=4.2,hard,intr  0 0
+    ```
+  - Then reload and mount:
+    ```bash
+    sudo systemctl daemon-reload
+    sudo mount -a
+    ```
 
-```bash
-sudo exportfs -ra
-sudo exportfs -v
-sudo systemctl enable --now nfs-server
-```
+4. **Test the mount:**
+  ```bash
+  mount | grep ' /home '
+  df -h /home
+  ls -la /home
+  echo "test from $(hostname)" | sudo tee /home/nfs_test.$(hostname)
+  ```
 
-4. Verify from another host that the server exports are visible:
+5. **Verify on the NFS host (`ryu`):**
+  ```bash
+  ls -l /home/nfs_test.*
+  ```
 
-```bash
-showmount -e kenmasters
-rpcinfo -p kenmasters
-```
-
-B. Client (new compute node, e.g. `frutiger`) — mount `/home`
-
-1. Install NFS client utilities:
-
-```bash
-sudo apt update
-sudo apt -y install nfs-common
-```
-
-(RHEL/CentOS: sudo yum install -y nfs-utils)
-
-2. Create the mount point and mount temporarily:
-
-```bash
-sudo mkdir -p /home
-sudo mount -t nfs -o vers=4.2,proto=tcp kenmasters:/home /home
-# or:
-sudo mount kenmasters:/home /home
-```
-
-3. Add persistent mount in `/etc/fstab` (add one line):
-
-```
-kenmasters:/home  /home  nfs  defaults,_netdev,vers=4.2,hard,intr  0 0
-```
-
-Then:
-
-```bash
-sudo systemctl daemon-reload
-sudo mount -a
-```
-
-4. Verify the mount and basic functionality:
-
-```bash
-mount | grep ' /home '
-df -h /home
-ls -la /home/software/miniforge3
-/home/software/miniforge3/bin/conda --version
-# write test (creates a file visible on the server and other nodes)
-echo "test from $(hostname)" | sudo tee /home/shared_test.$(hostname)
-# On kenmasters or another node, list:
-ls -l /home/shared_test.*
-```
+---
 
 C. Troubleshooting & common issues
 
