@@ -339,6 +339,83 @@ conda env list
 
 ---
 
+## 10) Configure SSSD to use login node's LDAP Auth Server
+
+
+1. Update the system and install required packages
+
+```
+sudo apt update
+sudo apt install -y \
+  sssd sssd-ldap \
+  libnss-sss libpam-sss \
+  ldap-utils \
+  openssh-server \
+  sssd-tools
+```
+
+2. Place config file in `/etc/sssd/sssd.conf`
+
+```
+[sssd]
+services = nss, pam
+config_file_version = 2
+domains = LDAP
+
+[domain/LDAP]
+id_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+
+ldap_uri = ldap://kenmasters
+ldap_search_base = dc=cluster,dc=local
+
+# Disable TLS completely
+ldap_id_use_start_tls = false
+ldap_tls_reqcert = never
+ldap_auth_disable_tls_never = true
+
+ldap_schema = rfc2307
+
+cache_credentials = true
+enumerate = false
+
+access_provider = permit
+
+fallback_homedir = /home/%u
+default_shell = /bin/bash
+```
+
+3. set the correct permissions for `sssd.conf`
+
+```
+sudo chmod 600 /etc/sssd/sssd.conf
+sudo chown root:root /etc/sssd/sssd.conf
+```
+
+4. Enable the sssd service
+
+```
+sudo systemctl enable --now sssd
+```
+
+Check the status with this command:
+
+```
+systemctl status sssd
+sssctl domain-status LDAP
+```
+
+(It should say `Online status: Online` somewhere in the output)
+
+Now you should be able to jump from the login node to the new node. Try testing with:
+
+```
+srun -w [new_node_name] --pty bash
+```
+
+You should see your LDAP account is carried over to the new node.
+
 ## Troubleshooting
 
 ### Node stuck `UNKNOWN`
