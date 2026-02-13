@@ -123,13 +123,13 @@ NodeName=frutiger CPUs=24 Boards=1 SocketsPerBoard=1 CoresPerSocket=12 ThreadsPe
 ## 5) Update `slurm.conf` on the controller
 *[Table of Contents](#table-of-contents)*
 
-On controller:
+### On controller:
 
 ```bash
 sudo vim /etc/slurm/slurm.conf
 ```
 
-Add a node definition for the worker.
+Add a node definition for the worker. (Paste in the line you copied from step 4)
 
 ```conf
 NodeName=frutiger Sockets=1 CoresPerSocket=12 ThreadsPerCore=2 CPUs=24 RealMemory=64202 State=UNKNOWN
@@ -141,7 +141,24 @@ Add the worker to a partition (example `debug`):
 PartitionName=debug Nodes=kenmasters,frutiger Default=YES MaxTime=INFINITE State=UP
 ```
 
-Restart controller:
+### If the worker has a GPU:
+---
+
+#### On Controller
+Add `Gres=gpu:1` to the line in `slurm.conf`. This allows the worker's GPU to be used by the cluster in jobs.
+```bash
+NodeName=frutiger Sockets=1 CoresPerSocket=12 ThreadsPerCore=2 CPUs=24 RealMemory=64202 Gres=gpu:1
+```
+
+#### On Worker
+Create a gres.conf file to alllow the worker's GPU to be used.
+
+```bash
+sudo vim /etc/slurm/gres.conf
+```
+---
+
+### Restart controller:
 
 ```bash
 sudo systemctl restart slurmctld
@@ -155,9 +172,10 @@ sudo systemctl restart slurmctld
 From controller:
 
 ```bash
-sudo scp /etc/slurm/slurm.conf frutiger:/tmp/slurm.conf
-ssh frutiger 'sudo mkdir -p /etc/slurm && sudo mv /tmp/slurm.conf /etc/slurm/slurm.conf'
+sudo scp /etc/slurm/slurm.conf direct@frutiger:/tmp/slurm.conf
+ssh direct@WORKER "echo 'PASSWORD' | sudo -S bash -c 'mkdir -p /etc/slurm && mv /tmp/slurm.conf /etc/slurm/slurm.conf'"
 ```
+
 
 ---
 
@@ -199,7 +217,7 @@ If you plan to mount the same `/home` on every compute node (so paths like `/hom
 
 ---
 
-## A. Setting Up the NFS Host (`ryu`) (Ignore if already setup)
+### A. Setting Up the NFS Host (`ryu`) (Ignore if already setup)
 *[Table of Contents](#table-of-contents)*
 
 **Important notes before you start:**
@@ -240,8 +258,14 @@ If you plan to mount the same `/home` on every compute node (so paths like `/hom
 
 ---
 
-## B. Adding a New NFS Client (e.g., a compute node)
+### B. Adding a New NFS Client (e.g., a compute node)
 *[Table of Contents](#table-of-contents)*
+
+0. **Ensure the NFS Host/Server(currently `ryu`) has been added to name resolution on client**
+  ```bash
+  sudo vim /etc/hosts
+  ```
+  Add `ryu` and its IP to hosts file
 
 1. **Install NFS client utilities:**
   ```bash
@@ -341,6 +365,7 @@ conda env list
 ## 10) Configure SSSD to use login node's LDAP Auth Server
 *[Table of Contents](#table-of-contents)*
 
+### On Worker (the one you are setting up)
 
 1. Update the system and install required packages
 
@@ -356,7 +381,7 @@ sudo apt install -y \
 
 2. Place config file in `/etc/sssd/sssd.conf`
 
-```
+```conf
 [sssd]
 services = nss, pam
 config_file_version = 2
@@ -403,8 +428,10 @@ Check the status with this command:
 
 ```
 systemctl status sssd
-sssctl domain-status LDAP
+sudo sssctl domain-status LDAP
 ```
+
+### On Controller (login node)
 
 (It should say `Online status: Online` somewhere in the output)
 
