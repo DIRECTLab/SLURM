@@ -2,6 +2,24 @@
 
 This guide adds a new compute node (worker) to an existing SLURM controller.
 
+---
+### Table of Contents
+1. [Name Resolution](#1-ensure-name-resolution-works-on-both-machines)
+1. [Install Munge](#2-install-munge-on-the-worker-and-copy-the-munge-key-must-match-controller)
+1. [Install SLURM daemon](#3-install-slurm-compute-daemon-on-the-worker)
+1. [Generate worker hardware line](#4-generate-the-correct-node-hardware-line-on-the-worker)
+1. [Update slurm config on controller](#5-update-slurmconf-on-the-controller)
+1. [Copy slurm config to worker](#6-copy-the-updated-slurmconf-to-the-worker)
+1. [Create worker runtime dirs and start slurmd](#7-create-worker-runtime-directories-and-start-slurmd)
+1. [Verify from controller](#8-verify-from-the-controller)
+1. [Mounting home dir on compute nodes](#9-mounting-the-home-directory-on-compute-nodes-make-home-shared-from-kenmasters)
+    1. [A. Setting up NFS Host](#a-setting-up-the-nfs-host-ryu-ignore-if-already-setup)
+    1. [B. Adding NFS Client](#b-adding-a-new-nfs-client-eg-a-compute-node)
+1. [Configure SSSD with LDAP](#10-configure-sssd-to-use-login-nodes-ldap-auth-server)
+1. [Troubleshooting](#troubleshooting)
+---
+
+
 Assumptions:
 - Controller host: `kenmasters`
 - New worker host: `frutiger` (replace with your worker hostname)
@@ -11,6 +29,7 @@ Assumptions:
 ---
 
 ## 1) Ensure name resolution works on BOTH machines
+*[Table of Contents](#table-of-contents)*
 
 On **both** nodes, ensure `/etc/hosts` has both entries (or DNS is configured):
 
@@ -36,6 +55,7 @@ ping -c1 kenmasters
 ---
 
 ## 2) Install Munge on the worker and copy the Munge key (MUST match controller)
+*[Table of Contents](#table-of-contents)*
 
 On worker:
 
@@ -48,7 +68,7 @@ sudo systemctl stop munge
 From controller, copy the key:
 
 ```bash
-sudo scp /etc/munge/munge.key frutiger:/tmp/munge.key
+sudo scp /etc/munge/munge.key direct@frutiger:/tmp/munge.key
 ```
 
 On worker, install it with correct permissions:
@@ -64,6 +84,7 @@ munge -n | unmunge
 ---
 
 ## 3) Install SLURM compute daemon on the worker
+*[Table of Contents](#table-of-contents)*
 
 On worker:
 
@@ -81,6 +102,7 @@ sudo systemctl mask slurmctld || true
 ---
 
 ## 4) Generate the correct node hardware line on the worker
+*[Table of Contents](#table-of-contents)*
 
 On worker:
 
@@ -88,7 +110,7 @@ On worker:
 sudo slurmd -C
 ```
 
-Copy the `NodeName=...` line output.
+Copy the full `NodeName=...` line output you will need it in step 5.
 
 Example output shape:
 
@@ -99,6 +121,7 @@ NodeName=frutiger CPUs=24 Boards=1 SocketsPerBoard=1 CoresPerSocket=12 ThreadsPe
 ---
 
 ## 5) Update `slurm.conf` on the controller
+*[Table of Contents](#table-of-contents)*
 
 On controller:
 
@@ -106,7 +129,7 @@ On controller:
 sudo vim /etc/slurm/slurm.conf
 ```
 
-Add a node definition for the worker. Prefer explicit topology fields:
+Add a node definition for the worker.
 
 ```conf
 NodeName=frutiger Sockets=1 CoresPerSocket=12 ThreadsPerCore=2 CPUs=24 RealMemory=64202 State=UNKNOWN
@@ -127,6 +150,7 @@ sudo systemctl restart slurmctld
 ---
 
 ## 6) Copy the updated `slurm.conf` to the worker
+*[Table of Contents](#table-of-contents)*
 
 From controller:
 
@@ -138,6 +162,7 @@ ssh frutiger 'sudo mkdir -p /etc/slurm && sudo mv /tmp/slurm.conf /etc/slurm/slu
 ---
 
 ## 7) Create worker runtime directories and start `slurmd`
+*[Table of Contents](#table-of-contents)*
 
 On worker:
 
@@ -151,6 +176,7 @@ sudo systemctl status slurmd --no-pager -l
 ---
 
 ## 8) Verify from the controller
+*[Table of Contents](#table-of-contents)*
 
 On controller:
 
@@ -163,38 +189,9 @@ Expected: node transitions to `idle`.
 
 ---
 
-## Troubleshooting
-
-### Node stuck `UNKNOWN`
-On worker:
-
-```bash
-sudo tail -n 200 /var/log/slurm/slurmd.log
-# or
-sudo journalctl -u slurmd --no-pager -n 200
-```
-
-On controller:
-
-```bash
-sudo tail -n 200 /var/log/slurm/slurmctld.log
-```
-
-Common causes:
-- Munge key mismatch (copy `/etc/munge/munge.key` from controller)
-- Hostname mismatch (NodeName must match `hostname` / DNS name SLURM uses)
-- Wrong CPU topology in `slurm.conf` (use `slurmd -C` output)
-- Firewall blocking ports (see SLURM ports below)
-
-### Ports to allow (typical defaults)
-- slurmctld: TCP 6817
-- slurmd: TCP 6818
-
-If you run a firewall (ufw/iptables), allow controller inbound 6817 and worker inbound 6818.
-
----
 
 ## 9) Mounting the home directory on compute nodes (make `/home` shared from `kenmasters`)
+*[Table of Contents](#table-of-contents)*
 
 
 
@@ -203,6 +200,7 @@ If you plan to mount the same `/home` on every compute node (so paths like `/hom
 ---
 
 ## A. Setting Up the NFS Host (`ryu`) (Ignore if already setup)
+*[Table of Contents](#table-of-contents)*
 
 **Important notes before you start:**
 - Exporting the whole `/home` is common but consider exporting a specific subtree (e.g. `/export/home` or `/export/software`) if you want finer control.
@@ -243,6 +241,7 @@ If you plan to mount the same `/home` on every compute node (so paths like `/hom
 ---
 
 ## B. Adding a New NFS Client (e.g., a compute node)
+*[Table of Contents](#table-of-contents)*
 
 1. **Install NFS client utilities:**
   ```bash
@@ -340,6 +339,7 @@ conda env list
 ---
 
 ## 10) Configure SSSD to use login node's LDAP Auth Server
+*[Table of Contents](#table-of-contents)*
 
 
 1. Update the system and install required packages
@@ -417,6 +417,7 @@ srun -w [new_node_name] --pty bash
 You should see your LDAP account is carried over to the new node.
 
 ## Troubleshooting
+*[Table of Contents](#table-of-contents)*
 
 ### Node stuck `UNKNOWN`
 On worker:
