@@ -8,20 +8,20 @@ This guide shows you how to SSH into the server using your public key that has a
 
 ## Server Details
 - **Server IP**: 129.123.61.22
-- **Username**: Your USU-specific number (A-number)
+- **Username**: Your username.
 
 ## How to SSH into the Server
 
-Replace `a_number` with your actual USU A-number (e.g., `a00123456`).
+Replace `username` with your actual username, for student accounts, this will be your A-number, for permanent accounts this will be the username you set on the form.
 
 ### Linux and macOS
 ```bash
-ssh -p 4242 a_number@129.123.61.22
+ssh -p 4242 username@129.123.61.22
 ```
 
 ### Windows (PowerShell)
 ```powershell
-ssh -p 4242 a_number@129.123.61.22
+ssh -p 4242 username@129.123.61.22
 ```
 
 ## First Time Login
@@ -46,6 +46,7 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 - Verify the server IP is correct: `129.123.61.22`
 - Check that you have network connectivity to the server
 - Ensure the server is running and accessible
+- Verify that you are on eduroam wifi or connected via VPN
 
 ### Using a Non-Default Key Location
 

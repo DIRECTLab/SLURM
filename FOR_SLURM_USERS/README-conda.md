@@ -12,24 +12,25 @@ Because `/home` is shared across nodes, the binaries are available everywhere. E
 
 ## 1) Getting Conda on your PATH
 
-If the admins have configured `/etc/profile.d/miniforge.sh` on the node you are on, then after logging in you should have:
-
 ```bash
 which conda
 conda --version
 ```
 
-If `conda` is not found, you can always use the full path:
+If `conda` is not found, you can always use the full path, you should source the conda.sh file.
+In any of your slurm scripts you should source the conda.sh file before doing anything else.
 
 ```bash
-/home/software/miniforge3/bin/conda --version
+source /home/software/miniforge3/etc/profile.d/conda.sh
 ```
 
-Or temporarily add it for your current shell:
+If you don't want to have to run this every time you open a new shell, add it to your .bashrc
 
 ```bash
-export PATH=/home/software/miniforge3/bin:$PATH
+echo "source /home/software/miniforge3/etc/profile.d/conda.sh" >> ~/.bashrc
+source ~/.bashrc
 ```
+
 
 ---
 
@@ -100,7 +101,7 @@ conda env remove -n myenv
 ## 5) Using Conda inside Slurm jobs (batch)
 
 Important: **Do not assume** that your currently-activated conda environment will be active inside a Slurm batch job.
-Always activate (or `conda run`) inside the job script.
+Always activate your env inside the job script.
 
 
 ```bash
@@ -110,8 +111,6 @@ Always activate (or `conda run`) inside the job script.
 #SBATCH -t 00:02:00
 #SBATCH -o %x-%j.out
 #SBATCH -e %x-%j.out
-
-export PATH=/home/software/miniforge3/bin:$PATH
 
 # Initialize conda for non-interactive shells
 source /home/software/miniforge3/etc/profile.d/conda.sh
