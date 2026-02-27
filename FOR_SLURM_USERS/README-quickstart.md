@@ -160,7 +160,7 @@ For an amd GPU:
 #SBATCH -J amd-gpu-test
 #SBATCH -p debug
 #SBATCH -N 1
-#SBATCH --gres=gpu:amd:1
+#SBATCH --gres=amdgpu:1
 #SBATCH -n 1
 #SBATCH -t 00:02:00
 #SBATCH -o %x-%j.out
