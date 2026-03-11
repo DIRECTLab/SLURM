@@ -132,9 +132,47 @@ scancel <jobid>
 
 If your cluster is configured with GRES GPUs, you can request them like:
 
+For an nvidia GPU:
+
+Create a script: `slurm_gpu_test.slurm`
+
 ```bash
-srun --gres=gpu:1 -N1 -n1 nvidia-smi
+#!/bin/bash
+#SBATCH -J nvidia-gpu-test
+#SBATCH -p debug
+#SBATCH -N 1
+#SBATCH --gres=gpu:1
+#SBATCH -n 1
+#SBATCH -t 00:02:00
+#SBATCH -o %x-%j.out
+#SBATCH -e %x-%j.out
+
+echo "HOST=$(hostname)"
+echo "DATE=$(date)"
+nvidia-smi
+id
+sleep 30
 ```
+For an amd GPU:
+
+```bash
+#!/bin/bash
+#SBATCH -J amd-gpu-test
+#SBATCH -p debug
+#SBATCH -N 1
+#SBATCH --gres=amdgpu:1
+#SBATCH -n 1
+#SBATCH -t 00:02:00
+#SBATCH -o %x-%j.out
+#SBATCH -e %x-%j.out
+
+echo "HOST=$(hostname)"
+echo "DATE=$(date)"
+rocminfo
+id
+sleep 30
+```
+
 
 Notes:
 - Intel GPUs typically use `/dev/dri/*`; they require GRES config to schedule properly.

@@ -68,6 +68,33 @@ ssh -i /path/to/your/private/key -p 4242 a_number@129.123.61.22
   ```
   Then simply login with: `ssh slurm-server`
 
+- **Use agent forwarding (optional)**: If you need to SSH from the login node to other systems using your local key, add `ForwardAgent yes` to the host entry in `~/.ssh/config`:
+  ```
+  Host slurm-server
+      HostName 129.123.61.22
+      Port 4242
+      User a_number
+      IdentityFile ~/.ssh/id_ed25519
+      ForwardAgent yes
+  ```
+  Then connect normally with `ssh slurm-server`.
+
+- **Use a jump host with ProxyJump (optional)**: If your network setup requires connecting through another SSH host first, add a jump host entry and set `ProxyJump`:
+  ```
+  Host ryu
+      HostName ryu
+      User username
+      ProxyJump clusteruser
+      ForwardAgent yes
+
+  Host clusteruser
+      HostName 129.123.61.22
+      User username
+      Port 4242
+      ForwardAgent yes
+  ```
+  Replace `username` with your actual SLURM username.
+
 - **File transfer**: Use `scp` to copy files to/from the server:
   ```bash
   # Copy file to server
@@ -100,6 +127,10 @@ You can use VS Code to edit and work directly on the server with the Remote SSH 
          Port 4242
          User a_number
          IdentityFile ~/.ssh/id_ed25519
+         # Optional: forward your local SSH agent to the remote host
+         ForwardAgent yes
+         # Optional: connect through a jump host (replace with your host alias)
+         # ProxyJump my-jump-host
      ```
 
 3. **Connect to the server**:
