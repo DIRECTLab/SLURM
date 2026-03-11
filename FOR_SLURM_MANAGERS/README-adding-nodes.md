@@ -156,6 +156,15 @@ Create a gres.conf file to alllow the worker's GPU to be used.
 ```bash
 sudo vim /etc/slurm/gres.conf
 ```
+
+Add the following line to the file:
+
+```conf
+Name=gpu File=/dev/nvidia0
+```
+
+Or something else based on the GPU device on the worker.
+
 ---
 
 ### Restart controller:
@@ -443,8 +452,18 @@ srun -w [new_node_name] --pty bash
 
 You should see your LDAP account is carried over to the new node.
 
+## 11) Setup ssh
+
+update the /etc/ssh/sshd_config and add the following lines
+
+```bash
+AllowGroups direct permanent
+```
+
+
 ## Troubleshooting
 *[Table of Contents](#table-of-contents)*
+
 
 ### Node stuck `UNKNOWN`
 On worker:
