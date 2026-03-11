@@ -22,7 +22,7 @@ Before SSHing into a node, you must allocate resources using `salloc`:
 salloc -w <nodename> -c 8
 ```
 
-Note: Please use the above command, unless you know what you are doing. Also note, if you set `--gpus=1`, no one else will be able to use that node, so don't do it unless absolutely necessary.
+Note: Please use the above command, unless you know what you are doing. Also note, if you set `--gpus=1`, no one else will be able to use that node, so don't do it unless absolutely necessary. If you need a gpu better practice for the HPC is to run `scontrol show node`, see which nodes have gpus, and run `salloc -w <gpu_node> -c 8`.
 
 **Parameters breakdown:**
 - `-w, --nodelist=<nodename>`: Specific node to use (required) - e.g., `ryu`, `chunli`
