@@ -208,3 +208,31 @@ See node details:
 ```bash
 scontrol show node <nodename>
 ```
+
+---
+
+## 8) Using Scratch Storage for Large Data
+
+To ensure high performance and avoid filling up the shared home directory, jobs that read or write large data files should use the local scratch directories.
+
+- **On the worker nodes (during a job):** Every user has a personal scratch directory physically located on each compute node at `/scratch/$USER`. When writing your `sbatch` scripts, you should output large datasets directly to this path.
+- **On the login node:** You can view, retrieve, or manage your scratch data directly from the login node without needing to SSH into the worker nodes. The local scratch directory of each compute node is exposed via NFS under `/scratch/<worker_node>/$USER` (e.g., `/scratch/frutiger/$USER`).
+
+**Example usage in an `sbatch` script:**
+
+```bash
+#!/bin/bash
+#SBATCH -J large-data-job
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH -o %x-%j.out
+
+# Write large temporary or output data to the node's local scratch
+OUTPUT_FILE="/scratch/$USER/my_large_output_${SLURM_JOB_ID}.dat"
+
+echo "Generating large data on node $(hostname)..."
+dd if=/dev/urandom of="$OUTPUT_FILE" bs=1M count=100
+
+echo "Job finished. Access this file from the login node at:"
+echo "/scratch/$(hostname)/$USER/my_large_output_${SLURM_JOB_ID}.dat"
+```
