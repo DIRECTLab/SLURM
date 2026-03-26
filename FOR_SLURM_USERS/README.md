@@ -150,6 +150,7 @@ Cancel it:
 ```bash
 scancel <jobid>
 ```
+**NOTE: The default job time is 8 hours, if you need more time, specify it with `--time=HH:MM:SS` or `-t HH:MM:SS`.**
 
 ### Requesting GPUs
 If nodes are configured with GRES GPUs, request them. 
