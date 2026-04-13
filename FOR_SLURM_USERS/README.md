@@ -180,7 +180,7 @@ If you need a node with a gpu, you can run the following to see which nodes have
 sinfo -o "%10n %10c %10m %25G" | grep gpu
 ```
 
-Then run the following command to allocate a job on the gpu node you want to access:
+Then run the following command to allocate a job on the gpu node you want to access, to see which gpus are being used, you can run `squeue1
 
 ```bash
 salloc -w terry -c 8
@@ -200,7 +200,7 @@ ssh terry
 
 ## 4. Environment Management (Conda)
 
-This cluster provides a shared instance of Miniforge located at `/home/software/miniforge3`. Please **do not** install packages into the shared base environment. Use user-specific environments.
+This cluster provides a shared instance of Miniforge located at `/home/software/miniforge3`.
 
 ### 1) Sourcing Conda
 Initialize Conda on your terminal or `.bashrc`:
@@ -208,29 +208,22 @@ Initialize Conda on your terminal or `.bashrc`:
 source /home/software/miniforge3/etc/profile.d/conda.sh
 ```
 
+To avoid doing this every time, add the above line to your `~/.bashrc` or `~/.bash_profile` so it loads automatically on login.
+
+```bash
+echo "source /home/software/miniforge3/etc/profile.d/conda.sh" >> ~/.bashrc
+``` 
+
 ### 2) Creating and using local Environments
 Creates the environment natively inside `~/.conda/envs`:
 ```bash
 conda create -n myenv python=3.11
 conda activate myenv
-conda install numpy scipy pandas   # or use `mamba install ...`
 ```
 
-### 3) Conda in SLURM Batch Scripts
-Important: **Do not assume** that your currently-activated conda environment will carry over to a Slurm batch job automatically! Always activate it securely inside the Slurm script itself:
+Now you have a conda env that you can install python packages via pip or conda, and they will be completely isolated from the machine-wide base environment. You can have as many environments as you like, and they will not interfere with each other.
 
-```bash
-#!/bin/bash
-#SBATCH -J conda-test
-
-# Initialize conda for non-interactive bash environments
-source /home/software/miniforge3/etc/profile.d/conda.sh
-conda activate myenv
-
-python -c "import sys; print(sys.executable)"
-```
-
-### 4) Installing CUDA-enabled PyTorch
+### 3) Installing CUDA-enabled PyTorch
 If your cluster has GPU nodes with CUDA, you can install the appropriate PyTorch version in your conda environment, the best way is to visit the official PyTorch installation selector: https://pytorch.org/get-started/locally/.
 
 Check your cuda version on the cluster
@@ -259,6 +252,22 @@ python -c "import torch; print('CUDA available:', torch.cuda.is_available())"
 ```
 
 It should print `CUDA available: True` if everything is set up correctly.
+
+### 4) Conda in SLURM Batch Scripts
+Important: **Do not assume** that your currently-activated conda environment will carry over to a Slurm batch job automatically! Always activate it securely inside the Slurm script itself:
+
+```bash
+#!/bin/bash
+#SBATCH -J conda-test
+
+# Initialize conda for non-interactive bash environments
+source /home/software/miniforge3/etc/profile.d/conda.sh
+conda activate myenv
+
+python -c "import sys; print(sys.executable)"
+```
+
+
 
 ---
 
