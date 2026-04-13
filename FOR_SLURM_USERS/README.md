@@ -239,6 +239,36 @@ conda activate myenv
 python -c "import sys; print(sys.executable)"
 ```
 
+### 4) Installing CUDA-enabled PyTorch
+If your cluster has GPU nodes with CUDA, you can install the appropriate PyTorch version in your conda environment, the best way is to visit the official PyTorch installation selector: https://pytorch.org/get-started/locally/.
+
+Check your cuda version on the cluster
+```bash
+nvidia-smi
+```
+
+Then select the right command on the website, for the nightly install with cuda 13.0, which should work best the command is as follows:
+
+first activate your conda environment
+```bash
+conda activate myenv
+```
+
+then install pytorch with the following command
+
+
+```bash
+pip3 install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu130
+```
+
+to make sure you have access to the gpu from your conda environment, run the following command
+
+```bash
+python -c "import torch; print('CUDA available:', torch.cuda.is_available())"
+```
+
+It should print `CUDA available: True` if everything is set up correctly.
+
 ---
 
 ## 5. Storage and Large Data
