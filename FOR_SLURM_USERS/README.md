@@ -174,31 +174,22 @@ While `srun` works great for terminals, sometimes you want to SSH directly into 
 
 **Security Policy:** Compute nodes are firewalled. You can only SSH to them through the login node (`ProxyJump`), **AND you must have an active SLURM job running on that target node.**
 
-### Step 1: Allocate Resources (`salloc`)
+If you need a node with a gpu, you can run the following to see which nodes have gpu resources available and their names:
 
-Allocate resources to start a background interactive job assignment. Most of the time, you should let SLURM automatically select any available node by removing the `-w` flag:
 ```bash
-# General CPU allocation (4 hours, 8 CPUs) on *any* available node
-salloc -t 04:00:00 -c 8
+sinfo -o "%10n %10c %10m %25G" | grep gpu
 ```
 
-If you specifically need a particular machine (e.g. `frutiger`), you can target it:
+Then run the following command to allocate a job on the gpu node you want to access:
+
 ```bash
-# General CPU allocation (4 hours, 8 CPUs) specifically on frutiger
-salloc -w frutiger -t 04:00:00 -c 8
-
-# GPU targeted allocation (24 hours, 16 CPUs, with advanced Memory flags)
-salloc -w chunli -t 1-00:00:00 -c 16 --mem=32G
+salloc -w terry -c 8
 ```
-*(Do not set `--gpus=1` unless checking exact parameters, as locking a GPU blocks all other GPU users for the node!)*
+This command will allocate a job on the `terry` node with 8 CPUs. Once the allocation is granted, you can SSH directly to `terry` using the alias we set up in the SSH config:
 
-### Step 2: Connect via SSH / VS Code
-
-Once `salloc` states the allocation is granted:
 ```bash
-ssh frutiger
+ssh terry
 ```
-Or simply use the `frutiger` target in your VS Code Remote extension. 
 
 ### Allocation Lifecycle
 - The node remains SSH-accessible only until your `salloc` time limit expires (`-t`) or you `exit` / `Ctrl+C` the `salloc` terminal window. 
