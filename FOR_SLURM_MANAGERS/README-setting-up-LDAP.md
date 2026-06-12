@@ -80,6 +80,11 @@ sudo systemctl restart sssd
 sudo sss_cache -E
 ```
 
+Change authselect to sssd
+```bash
+sudo authselect select sssd
+```
+
 ---
 
 ### 3) Verify NSS is using SSSD
